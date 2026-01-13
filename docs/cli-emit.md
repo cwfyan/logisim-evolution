@@ -8,6 +8,12 @@ This CLI emits a single component’s `<comp ...>` XML fragment and pin layout d
 ./gradlew -q emitComponent --args="--component 'Pin' --attr type=input --attr facing=east --loc 40,20"
 ```
 
+To keep a pretty-printed XML fragment in a file:
+
+```bash
+./gradlew -q emitComponent --args="--component 'Pin' --attr type=input --attr facing=east --loc 40,20 --xml-pretty --xml-out build/pin.xml"
+```
+
 ## Usage (Python wrapper)
 
 ```bash
