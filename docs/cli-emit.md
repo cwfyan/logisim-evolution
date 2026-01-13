@@ -43,7 +43,8 @@ print(result.data)
 ```
 
 On Windows, the helper will automatically use `gradlew.bat`. You can override it with
-`gradle_path` if needed.
+`gradle_path` if needed. The helper decodes Gradle output as UTF-8 (with replacement)
+to avoid crashes when the console code page is not UTF-8.
 
 The output is JSON with:
 

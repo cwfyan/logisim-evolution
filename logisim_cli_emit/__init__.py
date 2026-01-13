@@ -62,13 +62,20 @@ def emit_component(
         gradle_path = "gradlew.bat" if os.name == "nt" else "./gradlew"
     args_value = " ".join(args)
     command = [gradle_path, "-q", "emitComponent", f"--args={args_value}"]
-    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    result = subprocess.run(
+        command,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
     if check and result.returncode != 0:
         raise RuntimeError(
             "emitComponent failed "
             f"(exit={result.returncode}): {result.stderr.strip()}"
         )
-    stdout = result.stdout.strip()
+    stdout = (result.stdout or "").strip()
     data = json.loads(stdout) if stdout else {}
     return EmitResult(stdout=stdout, data=data)
 
