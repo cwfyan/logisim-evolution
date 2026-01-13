@@ -29,7 +29,7 @@ python -m logisim_cli_emit --component "Pin" --attr type=input --attr facing=eas
 The output is JSON with:
 
 - `componentXml`: the `<comp ...>` fragment as Logisim-evolution would export it.
-- `bbox`: the component bounding box, both absolute and relative to the component location.
+- `bbox`: the component bounding box, with absolute edges and offset points formatted as `(x,y)`.
 - `pins`: list of pin/endpoints with absolute and relative coordinates.
 When inserting the fragment into a `.circ` file, ensure the file’s `<lib ...>` list matches the
 library order used by your Logisim-evolution instance so that `lib="N"` resolves correctly.

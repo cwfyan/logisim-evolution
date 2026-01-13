@@ -391,12 +391,14 @@ public final class EmitComponentCli {
       builder.append("\"right\":").append(right).append(",");
       builder.append("\"bottom\":").append(bottom).append("},");
       builder.append("\"offset\":{");
-      builder.append("\"left\":").append(offsetLeft).append(",");
-      builder.append("\"top\":").append(offsetTop).append(",");
-      builder.append("\"right\":").append(offsetRight).append(",");
-      builder.append("\"bottom\":").append(offsetBottom).append("}}");
+      builder.append("\"topLeft\":\"").append(formatPoint(offsetLeft, offsetTop)).append("\",");
+      builder.append("\"bottomRight\":\"").append(formatPoint(offsetRight, offsetBottom)).append("\"}}");
       return builder.toString();
     }
+  }
+
+  private static String formatPoint(int x, int y) {
+    return "(" + x + "," + y + ")";
   }
 
 }
