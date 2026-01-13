@@ -8,6 +8,18 @@ This CLI emits a single component’s `<comp ...>` XML fragment and pin layout d
 ./gradlew -q emitComponent --args="--component 'Pin' --attr type=input --attr facing=east --loc 40,20"
 ```
 
+To keep a pretty-printed XML fragment in a file:
+
+```bash
+./gradlew -q emitComponent --args="--component 'Pin' --attr type=input --attr facing=east --loc 40,20 --xml-pretty --xml-out build/pin.xml"
+```
+
+To also write the pin layout JSON array to a file:
+
+```bash
+./gradlew -q emitComponent --args="--component 'Pin' --attr type=input --attr facing=east --loc 40,20 --pins-out build/pin-pins.json"
+```
+
 ## Usage (Python wrapper)
 
 ```bash
@@ -17,6 +29,7 @@ python -m logisim_cli_emit --component "Pin" --attr type=input --attr facing=eas
 The output is JSON with:
 
 - `componentXml`: the `<comp ...>` fragment as Logisim-evolution would export it.
+- `bbox`: the component bounding box, both absolute and relative to the component location.
 - `pins`: list of pin/endpoints with absolute and relative coordinates.
 - `libraries`: builtin library mapping used for `lib` indices (index ↔ descriptor).
 

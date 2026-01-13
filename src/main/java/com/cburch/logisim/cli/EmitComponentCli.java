@@ -13,6 +13,7 @@ import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.comp.EndData;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
+import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.file.LoadFailedException;
 import com.cburch.logisim.file.Loader;
@@ -23,6 +24,9 @@ import com.cburch.logisim.instance.Port;
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Library;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.transform.OutputKeys;
@@ -61,6 +65,20 @@ public final class EmitComponentCli {
         .longOpt("loc")
         .hasArg()
         .desc("Location for the component, e.g. 40,30 or (40,30). Defaults to 0,0.")
+        .build());
+    options.addOption(Option.builder()
+        .longOpt("xml-out")
+        .hasArg()
+        .desc("Write the component XML fragment to the given file path.")
+        .build());
+    options.addOption(Option.builder()
+        .longOpt("xml-pretty")
+        .desc("Pretty-print the component XML (applies to JSON and xml-out).")
+        .build());
+    options.addOption(Option.builder()
+        .longOpt("pins-out")
+        .hasArg()
+        .desc("Write the pin layout JSON array to the given file path.")
         .build());
     options.addOption(new Option("h", "help", false, "Show help."));
 
@@ -107,12 +125,24 @@ public final class EmitComponentCli {
       applyAttributes(attrs, cmd.getOptionValues("attr"));
       final var component = factory.createComponent(loc, attrs);
 
-      final var xml = elementToString(ComponentXmlEmitter.toElement(file, loader, component));
+      final var xmlElement = ComponentXmlEmitter.toElement(file, loader, component);
+      final var prettyXml = cmd.hasOption("xml-pretty");
+      final var xml = elementToString(xmlElement, prettyXml);
+      final var xmlOut = cmd.getOptionValue("xml-out");
+      if (xmlOut != null) {
+        Files.writeString(Path.of(xmlOut), xml, StandardCharsets.UTF_8);
+      }
       final var pins = collectPins(component);
+      final var pinsOut = cmd.getOptionValue("pins-out");
+      if (pinsOut != null) {
+        Files.writeString(Path.of(pinsOut), renderPinsJson(pins), StandardCharsets.UTF_8);
+      }
       final var libs = collectLibraries(loader, file.getLibraries());
+      final var bbox = computeBounds(component);
 
-      final var output = renderJson(componentName, loc, xml, pins, libs);
+      final var output = renderJson(componentName, loc, xml, bbox, pins, libs);
       System.out.println(output);
+      System.exit(0);
     } catch (Exception e) {
       System.err.println("Failed to emit component: " + e.getMessage());
       e.printStackTrace(System.err);
@@ -120,12 +150,19 @@ public final class EmitComponentCli {
     }
   }
 
-  private static String elementToString(Element element) throws TransformerException {
+  private static String elementToString(Element element, boolean pretty) throws TransformerException {
     if (element == null) return "";
     final var tfFactory = TransformerFactory.newInstance();
     final Transformer transformer = tfFactory.newTransformer();
     transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-    transformer.setOutputProperty(OutputKeys.INDENT, "no");
+    transformer.setOutputProperty(OutputKeys.INDENT, pretty ? "yes" : "no");
+    if (pretty) {
+      try {
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+      } catch (IllegalArgumentException ignored) {
+        // Do nothing
+      }
+    }
     final var writer = new StringWriter();
     transformer.transform(new DOMSource(element), new StreamResult(writer));
     return writer.toString().trim();
@@ -237,6 +274,7 @@ public final class EmitComponentCli {
       String componentName,
       Location loc,
       String xml,
+      BoundsInfo bbox,
       List<PinInfo> pins,
       List<LibraryInfo> libs) {
     final var escapedComponent = escape(componentName);
@@ -247,6 +285,7 @@ public final class EmitComponentCli {
     builder.append("\"location\":").append("{\"x\":").append(loc.getX())
         .append(",\"y\":").append(loc.getY()).append("},");
     builder.append("\"componentXml\":\"").append(escapedXml).append("\",");
+    builder.append("\"bbox\":").append(bbox.toJson()).append(",");
     builder.append("\"pins\":[");
     for (var i = 0; i < pins.size(); i++) {
       if (i > 0) builder.append(",");
@@ -260,6 +299,35 @@ public final class EmitComponentCli {
     }
     builder.append("]");
     builder.append("}");
+    return builder.toString();
+  }
+
+  private static BoundsInfo computeBounds(Component component) {
+    final var bounds = component.getBounds();
+    final var loc = component.getLocation();
+    final var left = bounds.getX();
+    final var top = bounds.getY();
+    final var right = bounds.getX() + bounds.getWidth();
+    final var bottom = bounds.getY() + bounds.getHeight();
+    return new BoundsInfo(
+        left,
+        top,
+        right,
+        bottom,
+        left - loc.getX(),
+        top - loc.getY(),
+        right - loc.getX(),
+        bottom - loc.getY());
+  }
+
+  private static String renderPinsJson(List<PinInfo> pins) {
+    final var builder = new StringBuilder();
+    builder.append("[");
+    for (var i = 0; i < pins.size(); i++) {
+      if (i > 0) builder.append(",");
+      builder.append(pins.get(i).toJson());
+    }
+    builder.append("]");
     return builder.toString();
   }
 
@@ -302,6 +370,31 @@ public final class EmitComponentCli {
       builder.append("\"absolute\":{\"x\":").append(absX).append(",\"y\":").append(absY).append("},");
       builder.append("\"offset\":{\"dx\":").append(offsetX).append(",\"dy\":").append(offsetY).append("}");
       builder.append("}");
+      return builder.toString();
+    }
+  }
+
+  private record BoundsInfo(
+      int left,
+      int top,
+      int right,
+      int bottom,
+      int offsetLeft,
+      int offsetTop,
+      int offsetRight,
+      int offsetBottom) {
+    String toJson() {
+      final var builder = new StringBuilder();
+      builder.append("{\"absolute\":{");
+      builder.append("\"left\":").append(left).append(",");
+      builder.append("\"top\":").append(top).append(",");
+      builder.append("\"right\":").append(right).append(",");
+      builder.append("\"bottom\":").append(bottom).append("},");
+      builder.append("\"offset\":{");
+      builder.append("\"left\":").append(offsetLeft).append(",");
+      builder.append("\"top\":").append(offsetTop).append(",");
+      builder.append("\"right\":").append(offsetRight).append(",");
+      builder.append("\"bottom\":").append(offsetBottom).append("}}");
       return builder.toString();
     }
   }
