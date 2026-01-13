@@ -23,9 +23,6 @@ import com.cburch.logisim.instance.Port;
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Library;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.transform.OutputKeys;
@@ -64,15 +61,6 @@ public final class EmitComponentCli {
         .longOpt("loc")
         .hasArg()
         .desc("Location for the component, e.g. 40,30 or (40,30). Defaults to 0,0.")
-        .build());
-    options.addOption(Option.builder()
-        .longOpt("xml-out")
-        .hasArg()
-        .desc("Write the component XML fragment to the given file path.")
-        .build());
-    options.addOption(Option.builder()
-        .longOpt("xml-pretty")
-        .desc("Pretty-print the component XML (applies to JSON and xml-out).")
         .build());
     options.addOption(new Option("h", "help", false, "Show help."));
 
@@ -119,19 +107,12 @@ public final class EmitComponentCli {
       applyAttributes(attrs, cmd.getOptionValues("attr"));
       final var component = factory.createComponent(loc, attrs);
 
-      final var xmlElement = ComponentXmlEmitter.toElement(file, loader, component);
-      final var prettyXml = cmd.hasOption("xml-pretty");
-      final var xml = elementToString(xmlElement, prettyXml);
-      final var xmlOut = cmd.getOptionValue("xml-out");
-      if (xmlOut != null) {
-        Files.writeString(Path.of(xmlOut), xml, StandardCharsets.UTF_8);
-      }
+      final var xml = elementToString(ComponentXmlEmitter.toElement(file, loader, component));
       final var pins = collectPins(component);
       final var libs = collectLibraries(loader, file.getLibraries());
 
       final var output = renderJson(componentName, loc, xml, pins, libs);
       System.out.println(output);
-      System.exit(0);
     } catch (Exception e) {
       System.err.println("Failed to emit component: " + e.getMessage());
       e.printStackTrace(System.err);
@@ -139,19 +120,12 @@ public final class EmitComponentCli {
     }
   }
 
-  private static String elementToString(Element element, boolean pretty) throws TransformerException {
+  private static String elementToString(Element element) throws TransformerException {
     if (element == null) return "";
     final var tfFactory = TransformerFactory.newInstance();
     final Transformer transformer = tfFactory.newTransformer();
     transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-    transformer.setOutputProperty(OutputKeys.INDENT, pretty ? "yes" : "no");
-    if (pretty) {
-      try {
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-      } catch (IllegalArgumentException ignored) {
-        // Do nothing
-      }
-    }
+    transformer.setOutputProperty(OutputKeys.INDENT, "no");
     final var writer = new StringWriter();
     transformer.transform(new DOMSource(element), new StreamResult(writer));
     return writer.toString().trim();
