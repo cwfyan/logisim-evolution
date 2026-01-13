@@ -32,6 +32,13 @@ application {
   mainClass.set("com.cburch.logisim.Main")
 }
 
+tasks.register<JavaExec>("emitComponent") {
+  group = "application"
+  description = "Emit a single component XML fragment and pin layout as JSON."
+  classpath = sourceSets["main"].runtimeClasspath
+  mainClass.set("com.cburch.logisim.cli.EmitComponentCli")
+}
+
 dependencies {
   implementation("org.hamcrest:hamcrest:3.0")
   implementation("javax.help:javahelp:2.0.05")
