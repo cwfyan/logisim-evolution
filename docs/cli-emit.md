@@ -42,6 +42,41 @@ result = emit_component(
 print(result.data)
 ```
 
+## Usage (Executable Jar)
+
+If you build a runnable JAR, you can invoke the CLI directly with `java` and avoid
+Gradle startup overhead:
+
+```bash
+java -cp build/libs/logisim-evolution.jar com.cburch.logisim.cli.EmitComponentCli \
+  --component "Pin" --attr type=input --attr facing=east --loc 40,20
+```
+
+### Python invocation for the JAR
+
+```python
+import json
+import subprocess
+
+command = [
+    "java",
+    "-cp",
+    "build/libs/logisim-evolution.jar",
+    "com.cburch.logisim.cli.EmitComponentCli",
+    "--component",
+    "Pin",
+    "--attr",
+    "type=input",
+    "--attr",
+    "facing=east",
+    "--loc",
+    "40,20",
+]
+result = subprocess.run(command, check=True, capture_output=True, text=True, encoding="utf-8")
+data = json.loads(result.stdout)
+print(data)
+```
+
 On Windows, the helper will automatically use `gradlew.bat`. You can override it with
 `gradle_path` if needed. The helper decodes Gradle output as UTF-8 (with replacement)
 to avoid crashes when the console code page is not UTF-8.
