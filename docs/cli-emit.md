@@ -42,6 +42,20 @@ result = emit_component(
 print(result.data)
 ```
 
+## Usage (Python function with JAR)
+
+```python
+from logisim_cli_emit import emit_component_jar
+
+result = emit_component_jar(
+    "Pin",
+    attrs={"type": "input", "facing": "east"},
+    location="40,20",
+    jar_path="build/libs/logisim-evolution.jar",
+)
+print(result.data)
+```
+
 ## Usage (Executable Jar)
 
 If you build a runnable JAR, you can invoke the CLI directly with `java` and avoid
@@ -72,7 +86,14 @@ command = [
     "--loc",
     "40,20",
 ]
-result = subprocess.run(command, check=True, capture_output=True, text=True, encoding="utf-8")
+result = subprocess.run(
+    command,
+    check=True,
+    capture_output=True,
+    text=True,
+    encoding="utf-8",
+    errors="replace",
+)
 data = json.loads(result.stdout)
 print(data)
 ```
