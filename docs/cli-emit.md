@@ -31,10 +31,8 @@ The output is JSON with:
 - `componentXml`: the `<comp ...>` fragment as Logisim-evolution would export it.
 - `bbox`: the component bounding box, both absolute and relative to the component location.
 - `pins`: list of pin/endpoints with absolute and relative coordinates.
-- `libraries`: builtin library mapping used for `lib` indices (index ↔ descriptor).
-
 When inserting the fragment into a `.circ` file, ensure the file’s `<lib ...>` list matches the
-`libraries` order in the output so that `lib="N"` resolves correctly.
+library order used by your Logisim-evolution instance so that `lib="N"` resolves correctly.
 
 ## Minimal demo / acceptance examples (5 components)
 

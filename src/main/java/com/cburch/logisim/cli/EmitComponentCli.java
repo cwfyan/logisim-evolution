@@ -15,7 +15,6 @@ import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Location;
-import com.cburch.logisim.file.LoadFailedException;
 import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.file.LogisimFile;
 import com.cburch.logisim.file.ComponentXmlEmitter;
@@ -41,7 +40,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.text.StringEscapeUtils;
 import org.w3c.dom.Element;
 
 public final class EmitComponentCli {
@@ -137,10 +135,9 @@ public final class EmitComponentCli {
       if (pinsOut != null) {
         Files.writeString(Path.of(pinsOut), renderPinsJson(pins), StandardCharsets.UTF_8);
       }
-      final var libs = collectLibraries(loader, file.getLibraries());
       final var bbox = computeBounds(component);
 
-      final var output = renderJson(componentName, loc, xml, bbox, pins, libs);
+      final var output = renderJson(componentName, loc, xml, bbox, pins);
       System.out.println(output);
       System.exit(0);
     } catch (Exception e) {
@@ -260,23 +257,12 @@ public final class EmitComponentCli {
     return "port" + index;
   }
 
-  private static List<LibraryInfo> collectLibraries(Loader loader, List<Library> libraries)
-      throws LoadFailedException {
-    final var info = new ArrayList<LibraryInfo>();
-    for (var i = 0; i < libraries.size(); i++) {
-      final var lib = libraries.get(i);
-      info.add(new LibraryInfo(i, lib.getName(), loader.getDescriptor(lib)));
-    }
-    return info;
-  }
-
   private static String renderJson(
       String componentName,
       Location loc,
       String xml,
       BoundsInfo bbox,
-      List<PinInfo> pins,
-      List<LibraryInfo> libs) {
+      List<PinInfo> pins) {
     final var escapedComponent = escape(componentName);
     final var escapedXml = escape(xml);
     final var builder = new StringBuilder();
@@ -290,12 +276,6 @@ public final class EmitComponentCli {
     for (var i = 0; i < pins.size(); i++) {
       if (i > 0) builder.append(",");
       builder.append(pins.get(i).toJson());
-    }
-    builder.append("],");
-    builder.append("\"libraries\":[");
-    for (var i = 0; i < libs.size(); i++) {
-      if (i > 0) builder.append(",");
-      builder.append(libs.get(i).toJson());
     }
     builder.append("]");
     builder.append("}");
@@ -332,7 +312,27 @@ public final class EmitComponentCli {
   }
 
   private static String escape(String value) {
-    return StringEscapeUtils.escapeJson(value);
+    final var builder = new StringBuilder();
+    for (int i = 0; i < value.length(); i++) {
+      final var ch = value.charAt(i);
+      switch (ch) {
+        case '\\' -> builder.append("\\\\");
+        case '"' -> builder.append("\\\"");
+        case '\b' -> builder.append("\\b");
+        case '\f' -> builder.append("\\f");
+        case '\n' -> builder.append("\\n");
+        case '\r' -> builder.append("\\r");
+        case '\t' -> builder.append("\\t");
+        default -> {
+          if (ch <= 0x1F) {
+            builder.append(String.format("\\u%04x", (int) ch));
+          } else {
+            builder.append(ch);
+          }
+        }
+      }
+    }
+    return builder.toString();
   }
 
   private record PinInfo(
@@ -399,13 +399,4 @@ public final class EmitComponentCli {
     }
   }
 
-  private record LibraryInfo(int index, String name, String descriptor) {
-    String toJson() {
-      final var builder = new StringBuilder();
-      builder.append("{\"index\":").append(index).append(",");
-      builder.append("\"name\":\"").append(escape(name)).append("\",");
-      builder.append("\"descriptor\":\"").append(escape(descriptor)).append("\"}");
-      return builder.toString();
-    }
-  }
 }
