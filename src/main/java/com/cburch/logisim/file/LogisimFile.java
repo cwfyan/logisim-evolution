@@ -198,6 +198,10 @@ public class LogisimFile extends Library implements LibraryEventSource, CircuitL
     return ret;
   }
 
+  public static LogisimFile createEmpty(Loader loader) {
+    return new LogisimFile(loader);
+  }
+
   private static String getFirstLine(BufferedInputStream in) throws IOException {
     final var first = new byte[512];
     in.mark(first.length - 1);
