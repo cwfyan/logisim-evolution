@@ -26,6 +26,22 @@ To also write the pin layout JSON array to a file:
 python -m logisim_cli_emit --component "Pin" --attr type=input --attr facing=east --loc 40,20
 ```
 
+## Usage (Python function)
+
+```python
+from logisim_cli_emit import emit_component
+
+result = emit_component(
+    "Pin",
+    attrs={"type": "input", "facing": "east"},
+    location="40,20",
+    xml_pretty=True,
+    xml_out="build/pin.xml",
+    pins_out="build/pin-pins.json",
+)
+print(result.data)
+```
+
 The output is JSON with:
 
 - `componentXml`: the `<comp ...>` fragment as Logisim-evolution would export it.
