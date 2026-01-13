@@ -292,3 +292,4 @@ gradle-app.setting
 
 # python代码
 *.py
+!logisim_cli_emit/*.py
