@@ -42,6 +42,9 @@ result = emit_component(
 print(result.data)
 ```
 
+On Windows, the helper will automatically use `gradlew.bat`. You can override it with
+`gradle_path` if needed.
+
 The output is JSON with:
 
 - `componentXml`: the `<comp ...>` fragment as Logisim-evolution would export it.

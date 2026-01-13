@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-import shlex
+import os
 import subprocess
 from dataclasses import dataclass
 from typing import Iterable, Mapping, Sequence
@@ -23,7 +23,7 @@ def emit_component(
     xml_out: str | None = None,
     xml_pretty: bool = False,
     pins_out: str | None = None,
-    gradle_path: str = "./gradlew",
+    gradle_path: str | None = None,
     extra_args: Sequence[str] | None = None,
     check: bool = True,
 ) -> EmitResult:
@@ -58,7 +58,10 @@ def emit_component(
     if extra_args:
         args.extend(extra_args)
 
-    command = [gradle_path, "-q", "emitComponent", "--args", shlex.join(args)]
+    if gradle_path is None:
+        gradle_path = "gradlew.bat" if os.name == "nt" else "./gradlew"
+    args_value = " ".join(args)
+    command = [gradle_path, "-q", "emitComponent", f"--args={args_value}"]
     result = subprocess.run(command, check=False, capture_output=True, text=True)
     if check and result.returncode != 0:
         raise RuntimeError(
