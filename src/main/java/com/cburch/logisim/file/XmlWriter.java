@@ -220,6 +220,21 @@ final class XmlWriter {
     tf.transform(src, dest);
   }
 
+  public static Element componentToElement(LogisimFile file, LibraryLoader loader, Component comp)
+      throws ParserConfigurationException, LoadFailedException, IOException {
+    final var docFactory = XmlUtil.getHardenedBuilderFactory();
+    final var docBuilder = docFactory.newDocumentBuilder();
+    final var doc = docBuilder.newDocument();
+    final var context = new XmlWriter(file, doc, loader);
+    for (final var lib : file.getLibraries()) {
+      context.fromLibrary(lib);
+    }
+    final var element = context.fromComponent(comp);
+    if (element == null) return null;
+    sort(element);
+    return element;
+  }
+
   void addAttributeSetContent(Element elt, AttributeSet attrs, AttributeDefaultProvider source, boolean userModifiedOnly) {
     if (attrs == null) return;
     if (source != null && source.isAllDefaultValues(attrs, BuildInfo.version)) return;
