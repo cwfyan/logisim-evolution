@@ -61,7 +61,7 @@ def emit_component(
     if gradle_path is None:
         gradle_path = "gradlew.bat" if os.name == "nt" else "./gradlew"
     args_value = " ".join(args)
-    command = [gradle_path, "-q", "emitComponent", f"--args={args_value}"]
+    command = [gradle_path, "--daemon", "-q", "emitComponent", f"--args={args_value}"]
     result = subprocess.run(
         command,
         check=False,
