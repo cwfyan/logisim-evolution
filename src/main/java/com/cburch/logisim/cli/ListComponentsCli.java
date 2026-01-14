@@ -90,6 +90,10 @@ public final class ListComponentsCli {
   private static List<ComponentInfo> collectComponents(List<Library> libraries) {
     final var components = new ArrayList<ComponentInfo>();
     for (final var lib : libraries) {
+      final var libraryName = lib.getDisplayName();
+      if ("TTL".equalsIgnoreCase(libraryName) || "TCL".equalsIgnoreCase(libraryName)) {
+        continue;
+      }
       for (final var tool : lib.getTools()) {
         if (tool instanceof AddTool addTool) {
           final var attrs = addTool.getAttributeSet();
