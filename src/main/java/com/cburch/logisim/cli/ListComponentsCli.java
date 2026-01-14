@@ -159,7 +159,7 @@ public final class ListComponentsCli {
       return new ComponentInfo(addTool.getName(), library.getDisplayName(), attrInfos);
     }
 
-    private static AttributeInfo attributeInfo(AttributeSet attrs, Attribute<?> attr) {
+    private static <V> AttributeInfo attributeInfo(AttributeSet attrs, Attribute<V> attr) {
       final var value = attrs.getValue(attr);
       final var display = attr.toDisplayString(value);
       return new AttributeInfo(attr.getName(), attr.getDisplayName(), display);
