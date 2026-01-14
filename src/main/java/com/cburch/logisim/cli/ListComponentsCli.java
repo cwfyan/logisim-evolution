@@ -150,7 +150,11 @@ public final class ListComponentsCli {
     }
   }
 
-  private record ComponentInfo(String name, String library, List<AttributeInfo> attributes) {
+  private record ComponentInfo(
+      String name,
+      String library,
+      String description,
+      List<AttributeInfo> attributes) {
     static ComponentInfo from(Library library, AddTool addTool, AttributeSet attrs) {
       final var attrInfos = new ArrayList<AttributeInfo>();
       for (final var attr : attrs.getAttributes()) {
@@ -160,7 +164,11 @@ public final class ListComponentsCli {
         attrInfos.add(attributeInfo(attrs, attr));
       }
       attrInfos.sort(Comparator.comparing(AttributeInfo::name, String.CASE_INSENSITIVE_ORDER));
-      return new ComponentInfo(addTool.getName(), library.getDisplayName(), attrInfos);
+      return new ComponentInfo(
+          addTool.getName(),
+          library.getDisplayName(),
+          addTool.getDescription(),
+          attrInfos);
     }
 
     private static <V> AttributeInfo attributeInfo(AttributeSet attrs, Attribute<V> attr) {
@@ -173,6 +181,7 @@ public final class ListComponentsCli {
       final var builder = new StringBuilder();
       builder.append("{\"name\":\"").append(escape(name)).append("\",");
       builder.append("\"library\":\"").append(escape(library)).append("\",");
+      builder.append("\"description\":\"").append(escape(description)).append("\",");
       builder.append("\"attributes\":[");
       for (var i = 0; i < attributes.size(); i++) {
         if (i > 0) builder.append(",");

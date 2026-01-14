@@ -26,6 +26,8 @@ To also write the pin layout JSON array to a file:
 ./gradlew -q listComponents
 ```
 
+Each component includes its description text along with attribute metadata.
+
 To write the component metadata JSON to a file:
 
 ```bash
