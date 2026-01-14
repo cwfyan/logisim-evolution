@@ -38,6 +38,12 @@ tasks.register<JavaExec>("emitComponent") {
   classpath = sourceSets["main"].runtimeClasspath
   mainClass.set("com.cburch.logisim.cli.EmitComponentCli")
 }
+tasks.register<JavaExec>("listComponents") {
+  group = "application"
+  description = "List all components and their attributes as JSON."
+  classpath = sourceSets["main"].runtimeClasspath
+  mainClass.set("com.cburch.logisim.cli.ListComponentsCli")
+}
 
 dependencies {
   implementation("org.hamcrest:hamcrest:3.0")

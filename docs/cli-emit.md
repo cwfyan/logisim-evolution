@@ -20,6 +20,18 @@ To also write the pin layout JSON array to a file:
 ./gradlew -q emitComponent --args="--component 'Pin' --attr type=input --attr facing=east --loc 40,20 --pins-out build/pin-pins.json"
 ```
 
+## Listing all components and attributes
+
+```bash
+./gradlew -q listComponents
+```
+
+To write the component metadata JSON to a file:
+
+```bash
+./gradlew -q listComponents --args="--out build/components.json"
+```
+
 ## Usage (Python wrapper)
 
 ```bash
