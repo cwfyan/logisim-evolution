@@ -120,7 +120,9 @@ public final class EmitComponentCli {
 
       final var factory = match.getFactory();
       final var attrs = (AttributeSet) match.getAttributeSet().clone();
-      applyAttributes(attrs, cmd.getOptionValues("attr"));
+      final var overrides = cmd.getOptionValues("attr");
+      applyDefaultAppearance(attrs, overrides);
+      applyAttributes(attrs, overrides);
       final var component = factory.createComponent(loc, attrs);
 
       final var xmlElement = ComponentXmlEmitter.toElement(file, loader, component);
@@ -218,6 +220,22 @@ public final class EmitComponentCli {
       }
       applyAttribute(attrs, attr, value);
     }
+  }
+
+  private static void applyDefaultAppearance(AttributeSet attrs, String[] overrides) {
+    final var appearanceAttr = findAttribute(attrs, "appearance");
+    if (appearanceAttr == null) return;
+    if (overrides != null) {
+      for (final var override : overrides) {
+        final var eq = override.indexOf('=');
+        if (eq <= 0) continue;
+        final var name = override.substring(0, eq).trim();
+        if (appearanceAttr.getName().equalsIgnoreCase(name)) {
+          return;
+        }
+      }
+    }
+    applyAttribute(attrs, appearanceAttr, "classic");
   }
 
   private static Attribute<?> findAttribute(AttributeSet attrs, String name) {

@@ -51,7 +51,7 @@ result = emit_component_jar(
     "Pin",
     attrs={"type": "input", "facing": "east"},
     location="40,20",
-    jar_path="build/libs/logisim-evolution.jar",
+    jar_path="build/libs/logisim-evolution-all.jar",
 )
 print(result.data)
 ```
@@ -62,7 +62,7 @@ If you build a runnable JAR, you can invoke the CLI directly with `java` and avo
 Gradle startup overhead:
 
 ```bash
-java -cp build/libs/logisim-evolution.jar com.cburch.logisim.cli.EmitComponentCli \
+java -cp build/libs/logisim-evolution-all.jar com.cburch.logisim.cli.EmitComponentCli \
   --component "Pin" --attr type=input --attr facing=east --loc 40,20
 ```
 
@@ -75,7 +75,7 @@ import subprocess
 command = [
     "java",
     "-cp",
-    "build/libs/logisim-evolution.jar",
+    "build/libs/logisim-evolution-all.jar",
     "com.cburch.logisim.cli.EmitComponentCli",
     "--component",
     "Pin",

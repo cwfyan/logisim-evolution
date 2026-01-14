@@ -110,7 +110,7 @@ def emit_component_jar(
     xml_out: str | None = None,
     xml_pretty: bool = False,
     pins_out: str | None = None,
-    jar_path: str = "build/libs/logisim-evolution.jar",
+    jar_path: str = "build/libs/logisim-evolution-all.jar",
     java_path: str = "java",
     extra_args: Sequence[str] | None = None,
     check: bool = True,
