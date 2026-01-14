@@ -103,23 +103,20 @@ public final class EmitComponentCli {
     try {
       final var loader = new Loader(null);
       final var file = LogisimFile.createEmpty(loader);
-      for (final var lib : loader.getBuiltin().getLibraries()) {
-        file.addLibrary(lib);
-      }
-
-      final var match = findTool(file.getLibraries(), componentName);
+      final var match = findTool(loader.getBuiltin().getLibraries(), componentName);
       if (match == null) {
         System.err.println("Component not found: " + componentName);
         System.err.println("Available components:");
-        for (final var name : collectComponentNames(file.getLibraries())) {
+        for (final var name : collectComponentNames(loader.getBuiltin().getLibraries())) {
           System.err.println("  - " + name);
         }
         System.exit(1);
         return;
       }
 
-      final var factory = match.getFactory();
-      final var attrs = (AttributeSet) match.getAttributeSet().clone();
+      file.addLibrary(match.library());
+      final var factory = match.tool().getFactory();
+      final var attrs = (AttributeSet) match.tool().getAttributeSet().clone();
       final var overrides = cmd.getOptionValues("attr");
       applyDefaultAppearance(attrs, overrides);
       applyAttributes(attrs, overrides);
@@ -176,7 +173,7 @@ public final class EmitComponentCli {
     return Location.parse(value);
   }
 
-  private static AddTool findTool(List<Library> libraries, String componentName) {
+  private static ToolMatch findTool(List<Library> libraries, String componentName) {
     for (final var lib : libraries) {
       for (final var tool : lib.getTools()) {
         if (tool instanceof AddTool addTool) {
@@ -184,7 +181,7 @@ public final class EmitComponentCli {
           if (factory == null) continue;
           if (factory.getName().equalsIgnoreCase(componentName)
               || addTool.getName().equalsIgnoreCase(componentName)) {
-            return addTool;
+            return new ToolMatch(lib, addTool);
           }
         }
       }
@@ -417,6 +414,9 @@ public final class EmitComponentCli {
 
   private static String formatPoint(int x, int y) {
     return "(" + x + "," + y + ")";
+  }
+
+  private record ToolMatch(Library library, AddTool tool) {
   }
 
 }
