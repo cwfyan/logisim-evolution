@@ -103,18 +103,22 @@ public final class EmitComponentCli {
     try {
       final var loader = new Loader(null);
       final var file = LogisimFile.createEmpty(loader);
-      final var match = findTool(loader.getBuiltin().getLibraries(), componentName);
+      final var builtins = loader.getBuiltin().getLibraries();
+      final var libs = orderLibraries(builtins);
+      final var match = findTool(libs, componentName);
       if (match == null) {
         System.err.println("Component not found: " + componentName);
         System.err.println("Available components:");
-        for (final var name : collectComponentNames(loader.getBuiltin().getLibraries())) {
+        for (final var name : collectComponentNames(builtins)) {
           System.err.println("  - " + name);
         }
         System.exit(1);
         return;
       }
 
-      file.addLibrary(match.library());
+      for (final var lib : libs) {
+        file.addLibrary(lib);
+      }
       final var factory = match.tool().getFactory();
       final var attrs = (AttributeSet) match.tool().getAttributeSet().clone();
       final var overrides = cmd.getOptionValues("attr");
@@ -414,6 +418,45 @@ public final class EmitComponentCli {
 
   private static String formatPoint(int x, int y) {
     return "(" + x + "," + y + ")";
+  }
+
+  private static List<Library> orderLibraries(List<Library> builtins) {
+    final var preferred = List.of(
+        "Wiring",
+        "Gates",
+        "Plexers",
+        "Arithmetic",
+        "Memory",
+        "I/O",
+        "TTL",
+        "TCL",
+        "Base",
+        "BFH-Praktika",
+        "Input/Output-Extra",
+        "Soc");
+    final var ordered = new ArrayList<Library>();
+    for (final var name : preferred) {
+      final var lib = findLibraryByName(builtins, name);
+      if (lib != null && !ordered.contains(lib)) {
+        ordered.add(lib);
+      }
+    }
+    for (final var lib : builtins) {
+      if (!ordered.contains(lib)) {
+        ordered.add(lib);
+      }
+    }
+    return ordered;
+  }
+
+  private static Library findLibraryByName(List<Library> libraries, String name) {
+    for (final var lib : libraries) {
+      if (lib.getName().equalsIgnoreCase(name)
+          || lib.getDisplayName().equalsIgnoreCase(name)) {
+        return lib;
+      }
+    }
+    return null;
   }
 
   private record ToolMatch(Library library, AddTool tool) {

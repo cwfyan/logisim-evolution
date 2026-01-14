@@ -20,6 +20,10 @@ To also write the pin layout JSON array to a file:
 ./gradlew -q emitComponent --args="--component 'Pin' --attr type=input --attr facing=east --loc 40,20 --pins-out build/pin-pins.json"
 ```
 
+The CLI aligns the emitted `lib` index to the default Logisim-evolution library
+order (Wiring, Gates, Plexers, Arithmetic, Memory, I/O, TTL, TCL, Base, BFH-Praktika,
+Input/Output-Extra, Soc), with any remaining libraries appended afterward.
+
 ## Listing all components and attributes
 
 ```bash
